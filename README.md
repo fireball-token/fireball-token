@@ -3,7 +3,9 @@
 Here you will be able to find the source code and upcoming audits!
 Stay tuned for more information.
 
-website: https://fireball.team
-telegram: https://t.me/
-twitter: https://t.co/
-twitch: https://twitch.tv/
+Website: https://fireball.team
+
+Telegram: https://t.me/fireballcronos
+
+Twitter: https://twitter.com/fireballcronos
+
