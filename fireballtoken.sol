@@ -882,7 +882,7 @@ contract Fireball is Context, IBEP20, Ownable {
     address[] private _excluded;
     address[] private _charity;
  
-    string private constant _NAME = "Fireball Token";
+    string private constant _NAME = "Fireball";
     string private constant _SYMBOL = "FIREBALL";
     uint8 private constant _DECIMALS = 9;
  
@@ -948,8 +948,8 @@ contract Fireball is Context, IBEP20, Ownable {
         _rOwned[_msgSender()] = _rTotal;
  
         IUniswapV2Router02 _uniswapV2Router =
-            IUniswapV2Router02(0x05fF2B0DB69458A0750badebc4f9e13aDd608C7F);
-        // Create a uniswap pair for this new token
+            IUniswapV2Router02(0xeC0A7a0C2439E8Cb67b992b12ecd020Ea943c7Be);
+        // Create a crodex pair for this new token
         uniswapV2Pair = IUniswapV2Factory(_uniswapV2Router.factory())
             .createPair(address(this), _uniswapV2Router.WETH());
  
