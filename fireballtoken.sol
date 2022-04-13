@@ -1,4 +1,18 @@
 // SPDX-License-Identifier: MIT
+
+/*
+
+                      )
+                     ) \
+                    / ) (
+                    \(_)/    
+
+    Welcome to Fireball Cronos | Cronos' First charity token
+
+    https://fireball.team
+    https://t.me/fireballcronos
+
+*/
  
 pragma solidity ^0.8.2;
  
@@ -14,9 +28,9 @@ abstract contract Context {
 }
  
 /**
- * @dev Interface of the BEP20 standard as defined in the EIP.
+ * @dev Interface of the CRO20 standard as defined in the EIP.
  */
-interface IBEP20 {
+interface ICRO20 {
     /**
      * @dev Returns the amount of tokens in existence.
      */
@@ -869,7 +883,7 @@ interface IMeerkatRouter02 is IMeerkatRouter01 {
     ) external;
 }
  
-contract Fireball is Context, IBEP20, Ownable {
+contract Fireball is Context, ICRO20, Ownable {
     using SafeMath for uint256;
     using Address for address;
  
@@ -880,7 +894,7 @@ contract Fireball is Context, IBEP20, Ownable {
     mapping(address => bool) private _isExcluded;
     mapping(address => bool) private _isCharity;
     address[] private _excluded;
-    address[] private _charity;
+    address private _charity;
  
     string private constant _NAME = "Fireball";
     string private constant _SYMBOL = "FIREBALL";
@@ -890,7 +904,7 @@ contract Fireball is Context, IBEP20, Ownable {
     uint256 private constant _DECIMALFACTOR = 10**uint256(_DECIMALS);
     uint256 private constant _GRANULARITY = 100;
  
-    uint256 private _tTotal = 1000000000000 * _DECIMALFACTOR;
+    uint256 private _tTotal = 10 * (10**6) * _DECIMALFACTOR;
     uint256 private _rTotal = (_MAX - (_MAX % _tTotal));
  
     uint256 private _tFeeTotal;
@@ -902,7 +916,7 @@ contract Fireball is Context, IBEP20, Ownable {
     uint256 private _LP_FEE = 200; //2% to LP
     uint256 private _BURN_FEE = 100; // 1% BURNED
     uint256 private _CHARITY_FEE = 100; // 1% TO CHARITY WALLET
-    uint256 private constant _MAX_TX_SIZE = 10000000000 * _DECIMALFACTOR;
+    uint256 private _MAX_TX_SIZE = 1 * (10**5) * _DECIMALFACTOR;
  
     // Track original fees to bypass fees for charity account
     uint256 private ORIG_TAX_FEE = _TAX_FEE;
@@ -1018,7 +1032,7 @@ contract Fireball is Context, IBEP20, Ownable {
             _msgSender(),
             _allowances[sender][_msgSender()].sub(
                 amount,
-                "BEP20: transfer amount exceeds allowance"
+                "CRO20: transfer amount exceeds allowance"
             )
         );
         return true;
@@ -1047,10 +1061,26 @@ contract Fireball is Context, IBEP20, Ownable {
             spender,
             _allowances[_msgSender()][spender].sub(
                 subtractedValue,
-                "BEP20: decreased allowance below zero"
+                "CRO20: decreased allowance below zero"
             )
         );
         return true;
+    }
+
+    function setSwapAndLiquifyEnabled(bool _enabled) public onlyOwner {
+        swapAndLiquifyEnabled = _enabled;
+        emit SwapAndLiquifyEnabledUpdated(_enabled);
+    }
+
+    function setMaxTx(uint256 maxTx) external onlyOwner {
+        _MAX_TX_SIZE = maxTx * _DECIMALFACTOR;
+    }
+
+    function setFees(uint256 _burn, uint256 _charityfee, uint256 _lp, uint256 _reflect) public onlyOwner {
+        _CHARITY_FEE = _charityfee;
+        _BURN_FEE = _burn;
+        _LP_FEE = _lp;
+        _TAX_FEE = _reflect;
     }
  
     function isExcluded(address account) public view returns (bool) {
@@ -1146,7 +1176,7 @@ contract Fireball is Context, IBEP20, Ownable {
         // );
         require(!_isCharity[account], "Account is already charity account");
         _isCharity[account] = true;
-        _charity.push(account);
+        _charity = account;
     }
  
     function _approve(
@@ -1154,8 +1184,8 @@ contract Fireball is Context, IBEP20, Ownable {
         address spender,
         uint256 amount
     ) private {
-        require(owner != address(0), "BEP20: approve from the zero address");
-        require(spender != address(0), "BEP20: approve to the zero address");
+        require(owner != address(0), "CRO20: approve from the zero address");
+        require(spender != address(0), "CRO20: approve to the zero address");
  
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
@@ -1222,27 +1252,30 @@ contract Fireball is Context, IBEP20, Ownable {
         address recipient,
         uint256 amount
     ) private {
-        require(sender != address(0), "BEP20: transfer from the zero address");
-        require(recipient != address(0), "BEP20: transfer to the zero address");
+        require(sender != address(0), "CRO20: transfer from the zero address");
+        require(recipient != address(0), "CRO20: transfer to the zero address");
         require(amount > 0, "Transfer amount must be greater than zero");
- 
+        
         // Remove fees for transfers to and from charity account or to excluded account
         bool takeFee = true;
         if (
             _isCharity[sender] ||
             _isCharity[recipient] ||
-            _isExcluded[recipient]
+            _isExcluded[recipient] 
         ) {
             takeFee = false;
         }
- 
-        if (!takeFee) removeAllFee();
+        
+
+         if (!takeFee) {removeAllFee();}
  
         if (sender != owner() && recipient != owner())
             require(
                 amount <= _MAX_TX_SIZE,
                 "Transfer amount exceeds the maxTxAmount."
             );
+
+       
  
         if (_isExcluded[sender] && !_isExcluded[recipient]) {
             _transferFromExcluded(sender, recipient, amount);
@@ -1256,7 +1289,11 @@ contract Fireball is Context, IBEP20, Ownable {
             _transferStandard(sender, recipient, amount);
         }
  
-        if (!takeFee) restoreAllFee();
+        if (!takeFee) {
+            restoreAllFee();
+        }
+
+
     }
  
     function _transferStandard(
@@ -1283,6 +1320,7 @@ contract Fireball is Context, IBEP20, Ownable {
             tBasics.charity,
             tBasics.liquidity
         );
+        
         emit Transfer(sender, recipient, tTransferAmount);
     }
  
@@ -1578,7 +1616,7 @@ contract Fireball is Context, IBEP20, Ownable {
     function _sendToCharity(uint256 tCharity, address sender) private {
         uint256 currentRate = _getRate();
         uint256 rCharity = tCharity.mul(currentRate);
-        address currentCharity = _charity[0];
+        address currentCharity = _charity;
         _rOwned[currentCharity] = _rOwned[currentCharity].add(rCharity);
         _tOwned[currentCharity] = _tOwned[currentCharity].add(tCharity);
         emit Transfer(sender, currentCharity, tCharity);
@@ -1606,7 +1644,7 @@ contract Fireball is Context, IBEP20, Ownable {
         return _TAX_FEE;
     }
  
-    function _getMaxTxAmount() private pure returns (uint256) {
+    function _getMaxTxAmount() private view returns (uint256) {
         return _MAX_TX_SIZE;
     }
 }
